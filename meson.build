@@ -50,9 +50,10 @@ base_sources = [
 ]
 
 if host_machine.system() == 'windows'
+  winmod = import('windows')
   base_sources += [
     'builds/windows/ftdebug.c',
-    'src/base/ftver.rc',
+    winmod.compile_resources('src/base/ftver.rc'),
   ]
 else
   base_sources += [
