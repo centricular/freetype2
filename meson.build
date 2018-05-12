@@ -1,6 +1,6 @@
 project('freetype2', 'c',
   meson_version: '>= 0.46',
-  version: '2.9.1',
+  version: '22.1.16',
   default_options: [ 'buildtype=debugoptimized'])
 
 pkgmod = import('pkgconfig')
