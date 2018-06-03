@@ -49,6 +49,63 @@ base_sources = [
   'src/winfonts/winfnt.c',
 ]
 
+ft2build_h = [
+  'include/ft2build.h',
+]
+
+ft_headers = [
+  'include/freetype/freetype.h',
+  'include/freetype/ftadvanc.h',
+  'include/freetype/ftbbox.h',
+  'include/freetype/ftbdf.h',
+  'include/freetype/ftbitmap.h',
+  'include/freetype/ftbzip2.h',
+  'include/freetype/ftcache.h',
+  'include/freetype/ftchapters.h',
+  'include/freetype/ftcid.h',
+  'include/freetype/ftdriver.h',
+  'include/freetype/fterrdef.h',
+  'include/freetype/fterrors.h',
+  'include/freetype/ftfntfmt.h',
+  'include/freetype/ftgasp.h',
+  'include/freetype/ftglyph.h',
+  'include/freetype/ftgxval.h',
+  'include/freetype/ftgzip.h',
+  'include/freetype/ftimage.h',
+  'include/freetype/ftincrem.h',
+  'include/freetype/ftlcdfil.h',
+  'include/freetype/ftlist.h',
+  'include/freetype/ftlzw.h',
+  'include/freetype/ftmac.h',
+  'include/freetype/ftmm.h',
+  'include/freetype/ftmodapi.h',
+  'include/freetype/ftmoderr.h',
+  'include/freetype/ftotval.h',
+  'include/freetype/ftoutln.h',
+  'include/freetype/ftparams.h',
+  'include/freetype/ftpfr.h',
+  'include/freetype/ftrender.h',
+  'include/freetype/ftsizes.h',
+  'include/freetype/ftsnames.h',
+  'include/freetype/ftstroke.h',
+  'include/freetype/ftsynth.h',
+  'include/freetype/ftsystem.h',
+  'include/freetype/fttrigon.h',
+  'include/freetype/fttypes.h',
+  'include/freetype/ftwinfnt.h',
+  'include/freetype/t1tables.h',
+  'include/freetype/ttnameid.h',
+  'include/freetype/tttables.h',
+  'include/freetype/tttags.h',
+]
+
+ft_config_headers = [
+  'include/freetype/config/ftmodule.h',
+  'include/freetype/config/ftheader.h',
+  'include/freetype/config/ftstdlib.h',
+  'include/freetype/config/ftconfig.h',
+]
+
 if host_machine.system() == 'windows'
   winmod = import('windows')
   base_sources += [
@@ -88,8 +145,6 @@ else
 endif
 
 check_optional_deps = [
-  ['zlib', {'conf-name': 'FT_CONFIG_OPTION_SYSTEM_ZLIB'}],
-  ['png', {'pkg': 'libpng'}],
   ['bzip2'],
   ['harfbuzz', {'version': '>= 1.3.0'}]
 ]
@@ -110,7 +165,7 @@ foreach check : check_optional_deps
   name = check[0]
   opts = check.length() > 1 ? check[1] : {}
   pkg_name = opts.get('pkg', name)
-  conf_name = opts.get('conf-name', 'FT_CONFIG_OPTION_USE_@0@'.format(name.to_upper()))
+  conf_name = 'FT_CONFIG_OPTION_USE_@0@'.format(name.to_upper())
 
   if opts.contains('version')
     dep = dependency(pkg_name, version : opts['version'], required : false)
@@ -125,18 +180,34 @@ foreach check : check_optional_deps
   endif
 endforeach
 
+zlib_dep = dependency('zlib', required: false, fallback: ['zlib', 'zlib_dep'])
+if zlib_dep.found()
+  conf.set('FT_CONFIG_OPTION_SYSTEM_ZLIB', 1)
+  deps += [zlib_dep]
+endif
+
+png_dep = dependency('libpng',
+  required: false,
+  fallback: ['libpng', 'png_dep']
+)
+if png_dep.found()
+  conf.set('FT_CONFIG_OPTION_USE_PNG', 1)
+  deps += [png_dep]
+endif
+
 configure_file(input: ftconfig_h_in,
   output: 'ftconfig.h',
   configuration: conf)
 
-configure_file(input: 'include/freetype/config/ftoption.h.in',
+ft_config_headers += [configure_file(input: 'include/freetype/config/ftoption.h.in',
   output: 'ftoption.h',
-  configuration: conf)
+  configuration: conf)]
 
 libfreetype = library('freetype', base_sources,
   include_directories: incbase,
   dependencies: deps,
   c_args: c_args,
+  install: true,
   version: '6.16.0',
   soversion: '6')
 
@@ -145,6 +216,11 @@ freetype_dep = declare_dependency(link_with: libfreetype,
   dependencies: deps
 )
 
+install_headers(ft2build_h, subdir: 'freetype2')
+install_headers(ft_headers, subdir: 'freetype2/freetype')
+install_headers(ft_config_headers, subdir: 'freetype2/freetype/config')
+
 pkgmod.generate(libfreetype,
+  name: 'freetype2',
   description: 'The FreeType font rendering library.',
   version: meson.project_version())
