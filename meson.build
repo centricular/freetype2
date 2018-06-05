@@ -223,4 +223,5 @@ install_headers(ft_config_headers, subdir: 'freetype2/freetype/config')
 pkgmod.generate(libfreetype,
   name: 'freetype2',
   description: 'The FreeType font rendering library.',
+  subdirs: ['freetype2'],
   version: meson.project_version())
