@@ -1,5 +1,5 @@
 project('freetype2', 'c',
-  meson_version: '>= 0.46',
+  meson_version: '>= 0.47.0',
   version: '22.1.16',
   default_options: [ 'buildtype=debugoptimized'])
 
@@ -167,7 +167,7 @@ foreach check : check_optional_deps
   pkg_name = opts.get('pkg', name)
   conf_name = 'FT_CONFIG_OPTION_USE_@0@'.format(name.to_upper())
 
-  if opts.contains('version')
+  if opts.has_key('version')
     dep = dependency(pkg_name, version : opts['version'], required : false)
   else
     dep = dependency(pkg_name, required : false)
