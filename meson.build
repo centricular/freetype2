@@ -144,15 +144,11 @@ else
   ftconfig_h_in = files('include/freetype/config/ftconfig.h')
 endif
 
-check_optional_deps = [
-  ['bzip2'],
-  ['harfbuzz', {'version': '>= 1.3.0'}]
-]
-
 conf = configuration_data()
 deps = []
 incbase = include_directories(['include'])
 
+# headers
 foreach check : check_headers
   name = check[0]
 
@@ -161,35 +157,33 @@ foreach check : check_headers
   endif
 endforeach
 
-foreach check : check_optional_deps
-  name = check[0]
-  opts = check.length() > 1 ? check[1] : {}
-  pkg_name = opts.get('pkg', name)
-  conf_name = 'FT_CONFIG_OPTION_USE_@0@'.format(name.to_upper())
+# optional dependencies
 
-  if opts.has_key('version')
-    dep = dependency(pkg_name, version : opts['version'], required : false)
-  else
-    dep = dependency(pkg_name, required : false)
-  endif
+# bzip2
+bzip2_dep = dependency('bzip2', required: get_option('bzip2'))
+if bzip2_dep.found()
+  conf.set('FT_CONFIG_OPTION_USE_BZIP2', 1)
+  deps += [bzip2_dep]
+endif
 
-  conf.set(conf_name, dep.found())
+# harfbuzz
+harfbuzz_dep = dependency('harfbuzz', version: '>= 1.3.0', required: get_option('harfbuzz'))
+if harfbuzz_dep.found()
+  conf.set('FT_CONFIG_OPTION_USE_HARFBUZZ', 1)
+  deps += [harfbuzz_dep]
+endif
 
-  if dep.found()
-    deps += [dep]
-  endif
-endforeach
-
-zlib_dep = dependency('zlib', required: false, fallback: ['zlib', 'zlib_dep'])
+# zlib
+zlib_dep = dependency('zlib', required: get_option('zlib'),
+  fallback: ['zlib', 'zlib_dep'])
 if zlib_dep.found()
   conf.set('FT_CONFIG_OPTION_SYSTEM_ZLIB', 1)
   deps += [zlib_dep]
 endif
 
-png_dep = dependency('libpng',
-  required: false,
-  fallback: ['libpng', 'png_dep']
-)
+# png
+png_dep = dependency('libpng', required: get_option('png'),
+  fallback: ['libpng', 'png_dep'])
 if png_dep.found()
   conf.set('FT_CONFIG_OPTION_USE_PNG', 1)
   deps += [png_dep]
