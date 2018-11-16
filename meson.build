@@ -160,8 +160,8 @@ endforeach
 # optional dependencies
 
 # bzip2
-bzip2_dep = dependency('bzip2', required: get_option('bzip2'))
-if bzip2_dep.found()
+bzip2_dep = cc.find_library('bz2', required: get_option('bzip2'))
+if bzip2_dep.found() and cc.has_header_symbol('bzlib.h', 'BZ2_bzlibVersion')
   conf.set('FT_CONFIG_OPTION_USE_BZIP2', 1)
   deps += [bzip2_dep]
 endif
