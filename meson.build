@@ -49,63 +49,6 @@ base_sources = [
   'src/winfonts/winfnt.c',
 ]
 
-ft2build_h = [
-  'include/ft2build.h',
-]
-
-ft_headers = [
-  'include/freetype/freetype.h',
-  'include/freetype/ftadvanc.h',
-  'include/freetype/ftbbox.h',
-  'include/freetype/ftbdf.h',
-  'include/freetype/ftbitmap.h',
-  'include/freetype/ftbzip2.h',
-  'include/freetype/ftcache.h',
-  'include/freetype/ftchapters.h',
-  'include/freetype/ftcid.h',
-  'include/freetype/ftdriver.h',
-  'include/freetype/fterrdef.h',
-  'include/freetype/fterrors.h',
-  'include/freetype/ftfntfmt.h',
-  'include/freetype/ftgasp.h',
-  'include/freetype/ftglyph.h',
-  'include/freetype/ftgxval.h',
-  'include/freetype/ftgzip.h',
-  'include/freetype/ftimage.h',
-  'include/freetype/ftincrem.h',
-  'include/freetype/ftlcdfil.h',
-  'include/freetype/ftlist.h',
-  'include/freetype/ftlzw.h',
-  'include/freetype/ftmac.h',
-  'include/freetype/ftmm.h',
-  'include/freetype/ftmodapi.h',
-  'include/freetype/ftmoderr.h',
-  'include/freetype/ftotval.h',
-  'include/freetype/ftoutln.h',
-  'include/freetype/ftparams.h',
-  'include/freetype/ftpfr.h',
-  'include/freetype/ftrender.h',
-  'include/freetype/ftsizes.h',
-  'include/freetype/ftsnames.h',
-  'include/freetype/ftstroke.h',
-  'include/freetype/ftsynth.h',
-  'include/freetype/ftsystem.h',
-  'include/freetype/fttrigon.h',
-  'include/freetype/fttypes.h',
-  'include/freetype/ftwinfnt.h',
-  'include/freetype/t1tables.h',
-  'include/freetype/ttnameid.h',
-  'include/freetype/tttables.h',
-  'include/freetype/tttags.h',
-]
-
-ft_config_headers = [
-  'include/freetype/config/ftmodule.h',
-  'include/freetype/config/ftheader.h',
-  'include/freetype/config/ftstdlib.h',
-  'include/freetype/config/ftconfig.h',
-]
-
 if host_machine.system() == 'windows'
   winmod = import('windows')
   base_sources += [
@@ -190,13 +133,27 @@ if png_dep.found()
   deps += [png_dep]
 endif
 
+includedir = join_paths(get_option('includedir'), 'freetype2')
+ftincludedir = join_paths(includedir, 'freetype')
+configincludedir = join_paths(ftincludedir, 'config')
+
+# Configure and install headers
 configure_file(input: ftconfig_h_in,
   output: 'ftconfig.h',
-  configuration: conf)
+  configuration: conf,
+  install_dir: configincludedir)
 
-ft_config_headers += [configure_file(input: 'include/freetype/config/ftoption.h.in',
+# Copy the original ftoption.h and add some #mesondefines to it to override the
+# existing configuration. This saves some maintenance burden over maintaining
+# a copy of that file.
+ftoption_h_in = configure_file(input: 'include/freetype/config/ftoption.h',
+  output: 'ftoption.h.in',
+  command: [find_program('include/configure-ftoption_h.py'), '@INPUT@', '@OUTPUT@'])
+
+configure_file(input: ftoption_h_in,
   output: 'ftoption.h',
-  configuration: conf)]
+  configuration: conf,
+  install_dir: configincludedir)
 
 libfreetype = library('freetype', base_sources,
   include_directories: incbase,
@@ -211,9 +168,13 @@ freetype_dep = declare_dependency(link_with: libfreetype,
   dependencies: deps
 )
 
-install_headers(ft2build_h, subdir: 'freetype2')
-install_headers(ft_headers, subdir: 'freetype2/freetype')
-install_headers(ft_config_headers, subdir: 'freetype2/freetype/config')
+install_headers('include/ft2build.h', subdir: 'freetype2')
+# Install the include subdirs as-is so we don't need to maintain an installed
+# headers list.
+install_subdir('include/freetype', install_dir: includedir,
+               exclude_directories: ['config', 'internal'])
+install_subdir('include/freetype/config', install_dir: ftincludedir,
+               exclude_files: ['ftoption.h', 'ftconfig.h'])
 
 pkgmod.generate(libfreetype,
   name: 'freetype2',
