@@ -126,6 +126,7 @@ c_args = [
 
 if host_machine.system() == 'windows'
   c_args += [
+    '-DDLL_EXPORT',
     '-D_CRT_SECURE_NO_WARNINGS',
     '-D_CRT_NONSTDC_NO_WARNINGS',
   ]
