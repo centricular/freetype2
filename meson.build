@@ -111,7 +111,9 @@ if bzip2_dep.found() and cc.has_header_symbol('bzlib.h', 'BZ2_bzlibVersion')
 endif
 
 # harfbuzz
-harfbuzz_dep = dependency('harfbuzz', version: '>= 1.3.0', required: get_option('harfbuzz'))
+harfbuzz_dep = dependency('harfbuzz', version: '>= 1.3.0',
+                          required: get_option('harfbuzz'),
+                          fallback: ['harfbuzz', 'libharfbuzz_dep'])
 if harfbuzz_dep.found()
   conf.set('FT_CONFIG_OPTION_USE_HARFBUZZ', 1)
   deps += [harfbuzz_dep]
