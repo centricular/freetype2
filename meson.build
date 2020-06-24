@@ -113,7 +113,9 @@ endif
 # harfbuzz
 harfbuzz_dep = dependency('harfbuzz', version: '>= 1.3.0',
                           required: get_option('harfbuzz'),
-                          fallback: ['harfbuzz', 'libharfbuzz_dep'])
+                          fallback: ['harfbuzz', 'libharfbuzz_dep'],
+                          default_options : ['freetype=disabled',
+                                             'fontconfig=disabled'])
 if harfbuzz_dep.found()
   conf.set('FT_CONFIG_OPTION_USE_HARFBUZZ', 1)
   deps += [harfbuzz_dep]
