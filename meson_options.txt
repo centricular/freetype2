@@ -5,5 +5,5 @@ option('bzip2', type: 'feature', value: 'auto',
   description: 'Use bzip2 to support bzip2-compressed fonts')
 option('zlib', type: 'feature', value: 'auto',
   description: 'Use system zlib instead of internal zlib')
-option('harfbuzz', type: 'feature', value: 'auto',
+option('harfbuzz', type: 'feature', value: 'disabled',
   description: 'Use HarfBuzz t improve auto-hinting of OpenType fonts')
