@@ -131,7 +131,7 @@ endif
 
 # png
 png_dep = dependency('libpng', required: get_option('png'),
-  fallback: ['libpng', 'png_dep'])
+  fallback: ['libpng', 'libpng_dep'])
 if png_dep.found()
   conf.set('FT_CONFIG_OPTION_USE_PNG', 1)
   deps += [png_dep]
